@@ -1,0 +1,6 @@
+[package]
+name = "power_monitor"
+version = "0.1.0"
+authors = ["Mark van Cuijk <mark@van-cuijk.nl>"]
+
+[dependencies]
