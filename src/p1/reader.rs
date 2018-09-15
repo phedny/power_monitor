@@ -1,10 +1,5 @@
 use std::io;
-
-#[derive(Debug, PartialEq)]
-pub enum ReadDatagram {
-    Datagram(Vec<u8>),
-    IncompleteDatagram(Vec<u8>)
-}
+use super::ReadDatagram;
 
 pub struct DatagramReader<R> {
     reader: R,
@@ -84,14 +79,14 @@ impl<R: io::BufRead> DatagramReader<R> {
         {
             let available = self.reader.fill_buf()?;
             if available.len() == 0 || available[0] == b'/' {
-                return Ok(ReadDatagram::IncompleteDatagram(datagram));
+                return Ok(ReadDatagram::IncompleteDatagram(datagram.into_boxed_slice()));
             }
         }
         self.read_crc_bytes(&mut datagram)?;
         if datagram[datagram.len() - 5] == b'!' {
-            Ok(ReadDatagram::Datagram(datagram))
+            Ok(ReadDatagram::Datagram(datagram.into_boxed_slice()))
         } else {
-            Ok(ReadDatagram::IncompleteDatagram(datagram))
+            Ok(ReadDatagram::IncompleteDatagram(datagram.into_boxed_slice()))
         }
     }
 }
@@ -152,7 +147,7 @@ mod tests {
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -167,12 +162,12 @@ mod tests {
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_2);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -188,12 +183,12 @@ mod tests {
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_2);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -209,7 +204,7 @@ mod tests {
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -225,7 +220,7 @@ mod tests {
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -241,7 +236,7 @@ mod tests {
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -260,7 +255,7 @@ mod tests {
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_1);
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -275,12 +270,12 @@ mod tests {
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(&correct_datagram_1[0..200]);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram.into_boxed_slice()));
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_2);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -299,12 +294,12 @@ mod tests {
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(&correct_datagram_1[0..200]);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram.into_boxed_slice()));
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_2);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 
     #[test]
@@ -323,11 +318,11 @@ mod tests {
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(&correct_datagram_1[0..correct_datagram_1.len() - 3]);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::IncompleteDatagram(expected_datagram.into_boxed_slice()));
 
         let mut expected_datagram = Vec::new();
         expected_datagram.extend_from_slice(correct_datagram_2);
         let datagram = reader.next();
-        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram));
+        assert_eq!(datagram.unwrap(), ReadDatagram::Datagram(expected_datagram.into_boxed_slice()));
     }
 }
