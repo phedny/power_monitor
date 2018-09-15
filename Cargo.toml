@@ -3,4 +3,5 @@ name = "power_monitor"
 version = "0.1.0"
 authors = ["Mark van Cuijk <mark@van-cuijk.nl>"]
 
-[dependencies]
+[dependencies.crc]
+git = "https://github.com/mrhooray/crc-rs"
