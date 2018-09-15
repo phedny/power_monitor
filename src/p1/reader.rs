@@ -70,7 +70,6 @@ impl<R: io::BufRead> DatagramReader<R> {
                 datagram.extend_from_slice(&available[0..crc_bytes]);
                 (available.len(), crc_bytes)
             };
-            println!("Reading CRC: {} available, {} read, {} needed", available_bytes, read_bytes, crc_bytes_needed);
             self.reader.consume(read_bytes);
             crc_bytes_needed -= read_bytes;
             if available_bytes == 0 || read_bytes < available_bytes || crc_bytes_needed == 0 {
@@ -81,9 +80,7 @@ impl<R: io::BufRead> DatagramReader<R> {
 
     fn next_datagram(&mut self) -> io::Result<ReadDatagram> {
         let _dropped_bytes = self.sync_to_datagram()?;
-        println!("Dropped {} bytes", _dropped_bytes);
         let mut datagram = self.read_datagram()?;
-        println!("Read {} datagram bytes", datagram.len());
         {
             let available = self.reader.fill_buf()?;
             if available.len() == 0 || available[0] == b'/' {
@@ -91,7 +88,6 @@ impl<R: io::BufRead> DatagramReader<R> {
             }
         }
         self.read_crc_bytes(&mut datagram)?;
-        println!("Read CRC bytes: {} {} {} {} {}", datagram[datagram.len()-5], datagram[datagram.len()-4], datagram[datagram.len()-3], datagram[datagram.len()-2], datagram[datagram.len()-1]);
         if datagram[datagram.len() - 5] == b'!' {
             Ok(ReadDatagram::Datagram(datagram))
         } else {
