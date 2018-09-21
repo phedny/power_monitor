@@ -1,7 +1,5 @@
-extern crate crc;
-
 use std::str;
-use self::crc::{crc16, Hasher16};
+use crc::{crc16, Hasher16, CalcType};
 
 pub mod reader;
 
@@ -26,7 +24,7 @@ pub fn verify_crc(datagram: ReadDatagram) -> ReadDatagram {
 fn verify_datagram_crc(datagram: Box<[u8]>) -> ReadDatagram {
     let (actual_crc, expected_crc) = {
         let data = &datagram[..datagram.len() - 4];
-        let mut digest = crc16::Digest::new_custom(crc16::USB, 0u16, 0u16, crc::CalcType::Reverse);
+        let mut digest = crc16::Digest::new_custom(crc16::USB, 0u16, 0u16, CalcType::Reverse);
         digest.write(data);
         let actual_crc = digest.sum16();
         
