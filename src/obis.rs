@@ -1,5 +1,6 @@
+use std::ops::{AddAssign, MulAssign};
 use std::fmt;
-use regex::Regex;
+use nom::is_digit;
 
 #[derive(Debug,PartialEq)]
 pub struct ObisIdentifier {
@@ -11,22 +12,58 @@ pub struct ObisIdentifier {
     f: u8,
 }
 
+fn buf_to_int<T>(s: &[u8]) -> T
+where
+	T: AddAssign + MulAssign + From<u8>,
+{
+	let mut sum = T::from(0);
+	for digit in s {
+		sum *= T::from(10);
+		sum += T::from(*digit - b'0');
+	}
+	sum
+}
+
+named!(value_group <&[u8], u8>, map!(take_while_m_n!(1, 3, is_digit), buf_to_int));
+named!(value_group_a_delimiter, tag!("-"));
+named!(value_group_a <&[u8], u8>, do_parse!(
+	value: value_group >>
+	_delimiter: value_group_a_delimiter >>
+	(value)
+));
+named!(value_group_b_delimiter, tag!(":"));
+named!(value_group_b <&[u8], u8>, do_parse!(
+	value: value_group >>
+	_delimiter: value_group_b_delimiter >>
+	(value)
+));
+named!(value_group_other_delimiter, tag!("."));
+named!(value_group_other <&[u8], u8>, do_parse!(
+	value: value_group >>
+	_delimiter: value_group_other_delimiter >>
+	(value)
+));
+named!(value_group_f <&[u8], u8>, do_parse!(
+	_delimiter: value_group_other_delimiter >>
+	value: value_group >>
+	(value)
+));
+named!(pub obis_identifier <&[u8], ObisIdentifier>, do_parse!(
+	a: opt!(value_group_a) >>
+	b: opt!(value_group_b) >>
+	c: value_group_other >>
+	d: value_group_other >>
+	e: value_group >>
+	f: opt!(value_group_f) >>
+	(ObisIdentifier { a, b, c, d, e, f: f.unwrap_or(255u8) })
+));
+
 impl ObisIdentifier {
 	pub fn parse(id: &str) -> Option<ObisIdentifier> {
-		lazy_static! {
-			static ref ID_PATTERN: Regex = Regex::new(r"^(?:(\d+)-)?(?:(\d+):)?(\d+)\.(\d+)(?:\.(\d+))?(?:\.(\d+))?$").unwrap();
+		match obis_identifier(id.as_bytes()) {
+			Ok((_, id)) => Some(id),
+			Err(_) => None,
 		}
-
-		ID_PATTERN.captures(id).map(|cap| {
-			let a = cap.get(1).map(|g| u8::from_str_radix(g.as_str(), 10).unwrap());
-			let b = cap.get(2).map(|g| u8::from_str_radix(g.as_str(), 10).unwrap());
-			let c = cap.get(3).map(|g| u8::from_str_radix(g.as_str(), 10).unwrap()).unwrap();
-			let d = cap.get(4).map(|g| u8::from_str_radix(g.as_str(), 10).unwrap()).unwrap();
-			let e = cap.get(5).map(|g| u8::from_str_radix(g.as_str(), 10).unwrap()).unwrap();
-			let f = cap.get(6).map_or(255u8, |g| u8::from_str_radix(g.as_str(), 10).unwrap());
-
-			ObisIdentifier { a, b, c, d, e, f }
-		})
 	}
 }
 

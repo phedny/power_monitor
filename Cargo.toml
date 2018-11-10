@@ -4,8 +4,7 @@ version = "0.1.0"
 authors = ["Mark van Cuijk <mark@van-cuijk.nl>"]
 
 [dependencies]
-lazy_static = "1.1.0"
-regex = "1"
+nom = "^4.0"
 
 [dependencies.crc]
 git = "https://github.com/mrhooray/crc-rs"
